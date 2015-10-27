@@ -39,7 +39,7 @@ say "Time spend creating the XML::Document, : ", $gumbo_last_xml_creation_durati
 
 ## Warning
 
-The XML::Document include all whitespace. That why in the previous example, the <p> element is not acceded with $xmldoc.root[1][0][0]
+The XML::Document include all whitespace. That why in the previous example, the 'p' element is not acceded with $xmldoc.root[1][0][0]
 Etheir use the XML::Element.elements method (eg: $xmldoc.root.elements[1].elements[0][0]) or the search form of the method.
 
 ## Contact
