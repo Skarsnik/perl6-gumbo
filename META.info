@@ -6,6 +6,6 @@
         "provides" : {
             "Gumbo" : "lib/Gumbo.pm6"
         },
-        "depends" : [ XML ],
-        "source-url" : "git://github.com/Skarsnik/perl6-gumbo"
+        "depends" : [ "XML" ],
+        "source-url" : "git://github.com/Skarsnik/perl6-gumbo.git"
 }
