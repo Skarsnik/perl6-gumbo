@@ -14,7 +14,19 @@ module Gumbo {
   class gumbo_output_t is repr('CPointer') {};
   class gumbo_attribute_t is repr('CPointer') {};
   
-  
+#   class HTML::Parser::XML is export {
+#     has	XML::Document	$.xmldoc;
+#     has			$.html;
+#     has			$.isgumbo = True;
+#     
+#     method parse (Str $html) {
+#       $.html = $html;
+#       $.xmldoc = parse-html($html);
+#       say "gumbo parseur";
+#       return $.xmldoc;
+#     }
+#   }
+#   
   enum gumbo_node_type (
      GUMBO_NODE_DOCUMENT => 0,
      GUMBO_NODE_ELEMENT => 1,
@@ -221,11 +233,16 @@ module Gumbo {
     say nativesizeof(int32);
   }
   
-  sub parse-html (Str $html) is export {
+  sub parse-html (Str $html, *%filters) is export {
     my $xmldoc;
     #gumbo-type-size();
-    explicitly-manage($html);
+    #explicitly-manage($html);
     my $t = now;
+    
+    if (%filters.elems > 0) {
+      die "Gumbo, parse_html : No TAG specified in the filter" unless %filters<TAG>.defined;
+      die "Gumbo, parse_html : Filters only allow 3 elements, did you try to filter on more than one attribute?" if %filters.elems > 3;
+    }
     
     my gumbo_output_t $gumbo_output = gumbo_parse($html);
     $gumbo_last_c_parse_duration = now - $t;
@@ -237,7 +254,11 @@ module Gumbo {
       my $htmlroot = build-element($groot.v.element);
       my $tab_child = nativecast(CArray[gumbo_node_t], $groot.v.element.children.data);
       loop (my $i = 0; $i < $groot.v.element.children.length; $i++) {
-	build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $htmlroot);
+	build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $htmlroot) if %filters.elems eq 0;
+	if %filters.elems > 0 {
+	  my $ret = build-tree2(nativecast(gumbo_node_s, $tab_child[$i]), $htmlroot, %filters);
+	  last unless $ret;
+	}
       }
       $xmldoc = XML::Document.new: root => $htmlroot;
     }
@@ -279,6 +300,43 @@ module Gumbo {
         $parent.append($xml);
       }
     }
+  }
+  # Only filter some elements
+  sub	build-tree2(gumbo_node_s $node, XML::Element $parent is rw, %filters) returns Bool {
+    my $in_filter = False;
+    given $node.type {
+      when GUMBO_NODE_ELEMENT.value {
+        my $xml;
+        if (%filters<TAG> eq gumbo_normalized_tagname($node.v.element.tag)) {
+          my $elem := $node.v.element;
+	  if ($elem.attributes.defined && (%filters.elems > 1 && !%filters<SINGLE>.defined || %filters.elems > 2 && %filters<SINGLE>.defined)) {
+	    my $tab_attr = nativecast(CArray[gumbo_attribute_t], $elem.attributes.data);
+	    loop (my $i = 0; $i < $elem.attributes.length; $i++) {
+	      my $cattr = nativecast(gumbo_attribute_s, $tab_attr[$i]);
+	      {$in_filter = True; last } if (%filters{$cattr.name}.defined && %filters{$cattr.name} eq $cattr.value);
+	    }
+	  }
+	  #No filtering on attributes
+	  if ((%filters.elems eq 1 && !%filters<SINGLE>.defined || 
+	       %filters.elems eq 2 && %filters<SINGLE>.defined)) {
+	    $in_filter = True;
+	  }
+	  if ($in_filter) {
+	    $xml = build-element($node.v.element);
+	    $parent.append($xml);
+	  }
+	}
+        my $tab_child = nativecast(CArray[gumbo_node_t], $node.v.element.children.data);
+	loop (my $i = 0; $i < $node.v.element.children.length; $i++) {
+	  my $ret = True;
+	  build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $xml) if $in_filter;
+	  $ret = build-tree2(nativecast(gumbo_node_s, $tab_child[$i]), $parent, %filters) if !$in_filter;
+	  return False unless $ret;
+	}
+	return False if $in_filter && %filters<SINGLE>.defined;
+      }
+     }
+     return True;
   }
   
   sub build-element(gumbo_element_s $elem) {
