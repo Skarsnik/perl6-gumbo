@@ -9,7 +9,7 @@ addons:
 install:
   - git clone https://github.com/google/gumbo-parser.git
   - echo $PWD
-  - ( cd gumbo-parser && ./configure --prefix=$HOME/gumbo && make install-exec )
+  - ( cd gumbo-parser && ./autogen.sh && ./configure --prefix=$HOME/gumbo-parser && make install-exec )
   - rm -rf gumbo-parser
   - echo $PWD
   - rakudobrew build-panda
