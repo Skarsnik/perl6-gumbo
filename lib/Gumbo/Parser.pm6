@@ -6,12 +6,13 @@ use Gumbo::Binding;
 
 unit class Gumbo::Parser does HTML::Parser;
 
-has Duration $.c_parse_duration;
-has Duration $.xml_creation_duration;
+has Duration	$.c_parse_duration;
+has Duration	$.xml_creation_duration;
+has Int		%.stats;
+has Bool	$!nowhitespace = False;
 
-method parse (Str $html, *%filters) returns XML::Document {
-    #gumbo-type-size();
-    #explicitly-manage($html);
+method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Document {
+    $!nowhitespace = $nowhitespace;
     my $t = now;
     
     if (%filters.elems > 0) {
@@ -25,13 +26,16 @@ method parse (Str $html, *%filters) returns XML::Document {
     my gumbo_output_s $go = nativecast(gumbo_output_s, $gumbo_output);
     my gumbo_node_s $groot = nativecast(gumbo_node_s, $go.root);
     my gumbo_node_s $gdoc = nativecast(gumbo_node_s, $go.document);
+    %!stats<xml_objects> = 1;
+    %!stats<whitespaces> = 0;
+    %!stats<elements> = 1;
     if ($groot.type eq GUMBO_NODE_ELEMENT.value) {
       my $htmlroot = build-element($groot.v.element);
       my $tab_child = nativecast(CArray[gumbo_node_t], $groot.v.element.children.data);
       loop (my $i = 0; $i < $groot.v.element.children.length; $i++) {
-	build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $htmlroot) if %filters.elems eq 0;
+	self!build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $htmlroot) if %filters.elems eq 0;
 	if %filters.elems > 0 {
-	  my $ret = build-tree2(nativecast(gumbo_node_s, $tab_child[$i]), $htmlroot, %filters);
+	  my $ret = self!build-tree2(nativecast(gumbo_node_s, $tab_child[$i]), $htmlroot, %filters);
 	  last unless $ret;
 	}
       }
@@ -52,19 +56,30 @@ method parse (Str $html, *%filters) returns XML::Document {
     return $!xmldoc;
   }
 
-  sub	build-tree(gumbo_node_s $node, XML::Element $parent is rw) {
+  method	!build-tree(gumbo_node_s $node, XML::Element $parent is rw) {
+    %!stats<xml_objects>++;
     given $node.type {
       when GUMBO_NODE_ELEMENT.value {
         my $xml = build-element($node.v.element);
         $parent.append($xml);
+        %!stats<elements>++;
         my $tab_child = nativecast(CArray[gumbo_node_t], $node.v.element.children.data);
 	loop (my $i = 0; $i < $node.v.element.children.length; $i++) {
-	  build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $xml);
+	  self!build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $xml);
 	}
       }
-      when GUMBO_NODE_TEXT.value | GUMBO_NODE_WHITESPACE.value {
+      when GUMBO_NODE_TEXT.value {
         my $xml = XML::Text.new(text => $node.v.text.text);
         $parent.append($xml);
+      }
+      when GUMBO_NODE_WHITESPACE.value {
+	%!stats<whitespaces>++;
+	if ! $!nowhitespace {
+	  my $xml = XML::Text.new(text => $node.v.text.text);
+	  $parent.append($xml);
+	} else {
+	  %!stats<xml_objects>--;
+	}
       }
       when GUMBO_NODE_COMMENT.value {
         my $xml = XML::Comment.new: data => $node.v.text.text;
@@ -77,7 +92,7 @@ method parse (Str $html, *%filters) returns XML::Document {
     }
   }
   # Only filter some elements
-  sub	build-tree2(gumbo_node_s $node, XML::Element $parent is rw, %filters) returns Bool {
+  method	!build-tree2(gumbo_node_s $node, XML::Element $parent is rw, %filters) returns Bool {
     my $in_filter = False;
     given $node.type {
       when GUMBO_NODE_ELEMENT.value {
@@ -97,6 +112,8 @@ method parse (Str $html, *%filters) returns XML::Document {
 	    $in_filter = True;
 	  }
 	  if ($in_filter) {
+	    %!stats<xml_objects>++;
+	    %!stats<elements>++;
 	    $xml = build-element($node.v.element);
 	    $parent.append($xml);
 	  }
@@ -104,8 +121,8 @@ method parse (Str $html, *%filters) returns XML::Document {
         my $tab_child = nativecast(CArray[gumbo_node_t], $node.v.element.children.data);
 	loop (my $i = 0; $i < $node.v.element.children.length; $i++) {
 	  my $ret = True;
-	  build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $xml) if $in_filter;
-	  $ret = build-tree2(nativecast(gumbo_node_s, $tab_child[$i]), $parent, %filters) if !$in_filter;
+	  self!build-tree(nativecast(gumbo_node_s, $tab_child[$i]), $xml) if $in_filter;
+	  $ret = self!build-tree2(nativecast(gumbo_node_s, $tab_child[$i]), $parent, %filters) if !$in_filter;
 	  return False unless $ret;
 	}
 	return False if $in_filter && %filters<SINGLE>.defined;
@@ -114,7 +131,7 @@ method parse (Str $html, *%filters) returns XML::Document {
      return True;
   }
   
-  sub build-element(gumbo_element_s $elem) {
+  sub	build-element(gumbo_element_s $elem) {
     my $xml = XML::Element.new;
     $xml.name = gumbo_normalized_tagname($elem.tag);
     return $xml unless $elem.attributes.defined;

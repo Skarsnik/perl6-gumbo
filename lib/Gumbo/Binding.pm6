@@ -13,19 +13,7 @@ module Gumbo::Binding {
   class gumbo_output_t is repr('CPointer') is export {};
   class gumbo_attribute_t is repr('CPointer') is export {};
   
-#   class HTML::Parser::XML is export {
-#     has	XML::Document	$.xmldoc;
-#     has			$.html;
-#     has			$.isgumbo = True;
-#     
-#     method parse (Str $html) {
-#       $.html = $html;
-#       $.xmldoc = parse-html($html);
-#       say "gumbo parseur";
-#       return $.xmldoc;
-#     }
-#   }
-#   
+
   enum gumbo_node_type is export (
      GUMBO_NODE_DOCUMENT => 0,
      GUMBO_NODE_ELEMENT => 1,
