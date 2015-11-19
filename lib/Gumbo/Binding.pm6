@@ -12,7 +12,6 @@ module Gumbo::Binding {
   class gumbo_node_t is repr('CPointer') is export {};
   class gumbo_output_t is repr('CPointer') is export {};
   class gumbo_attribute_t is repr('CPointer') is export {};
-  
 
   enum gumbo_node_type is export (
      GUMBO_NODE_DOCUMENT => 0,
@@ -184,7 +183,7 @@ module Gumbo::Binding {
   class gumbo_node_s is repr('CStruct') is export {
     has int32		$.type;
     has gumbo_node_s	$.parent;
-    has uint32		$.index_within_parent;
+    has OpaquePointer	$.index_within_parent; # FIXME should be size_t
     has int32		$.parse_flags;
     HAS g_node_union	$.v;
   }
