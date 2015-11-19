@@ -14,7 +14,6 @@ has Bool	$!nowhitespace = False;
 method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Document {
     $!nowhitespace = $nowhitespace;
     my $t = now;
-    
     if (%filters.elems > 0) {
       die "Gumbo, parse_html : No TAG specified in the filter" unless %filters<TAG>.defined;
       die "Gumbo, parse_html : Filters only allow 3 elements, did you try to filter on more than one attribute?" if %filters.elems > 3;
@@ -53,6 +52,9 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
       }
     }
     $!xml_creation_duration = now - $t;
+    my gumbo_options_s $kGumboDefaultOptions := cglobal('libgumbo', 'kGumboDefaultOptions', gumbo_options_s);
+    my gumbo_options_s $gopt = $kGumboDefaultOptions;
+    gumbo_destroy_output($gopt, $gumbo_output);
     return $!xmldoc;
   }
 

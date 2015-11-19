@@ -12,7 +12,6 @@ module Gumbo::Binding {
   class gumbo_node_t is repr('CPointer') is export {};
   class gumbo_output_t is repr('CPointer') is export {};
   class gumbo_attribute_t is repr('CPointer') is export {};
-  
 
   enum gumbo_node_type is export (
      GUMBO_NODE_DOCUMENT => 0,
@@ -184,15 +183,41 @@ module Gumbo::Binding {
   class gumbo_node_s is repr('CStruct') is export {
     has int32		$.type;
     has gumbo_node_s	$.parent;
-    has uint32		$.index_within_parent;
+    has OpaquePointer	$.index_within_parent; # FIXME should be size_t
     has int32		$.parse_flags;
     HAS g_node_union	$.v;
   }
   
   class gumbo_vector_t is repr('CPointer') is export {};
   
+# typedef struct GumboInternalOptions {
+#   565   GumboAllocatorFunction allocator;
+#   566 
+#   568   GumboDeallocatorFunction deallocator;
+#   569 
+#   574   void* userdata;
+#   575 
+#   580   int tab_stop;
+#   581 
+#   586   bool stop_on_first_error;
+#   587 
+#   595   int max_errors;
+#   596 
+#   610   GumboTag fragment_context;
+#   611 
+#   618   GumboNamespaceEnum fragment_namespace;
+#   619 } GumboOptions;
 
-
+  class gumbo_options_s is repr('CStruct') is export {
+    has OpaquePointer	$.allocator;
+    has OpaquePointer	$.deallocator;
+    has OpaquePointer	$.userdata;
+    has	int32		$.tab_stop;
+    has	int8		$.stop_on_first_error;
+    has int32		$.max_errors;
+    has	int32		$.fragment_context;
+    has	int32		$.fragment_namespace;
+  }
   
 #   typedef struct GumboInternalOutput {
 #      GumboNode* document;
@@ -211,6 +236,8 @@ module Gumbo::Binding {
 
   sub gumbo_parse(Str) is native('libgumbo') returns gumbo_output_t is export { * }
   sub gumbo_normalized_tagname(int32) is native('libgumbo') returns str is export { * }
+  sub gumbo_destroy_output(gumbo_options_s, gumbo_output_t) is native('libgumbo') is export { * }
+	
   
   #this is only for debug purpose, show the size of the differents struct
   sub gumbo-type-size is export {
@@ -219,5 +246,5 @@ module Gumbo::Binding {
     }
     say nativesizeof(int32);
   }
-
+#   our gumbo_options_s $kGumboDefaultOptions is export := cglobal('libgumbo', 'kGumboDefaultOptions', gumbo_options_s);
 }
