@@ -29,7 +29,7 @@ module Gumbo::Binding {
 #    70   unsigned int offset;
 #    71 } GumboSourcePosition;
 
-  class gumbo_source_position is repr('CStruct') is export {
+  class gumbo_source_position_s is repr('CStruct') is export {
     has uint32	$.line;
     has uint32	$.column;
     has uint32	$.offset;
@@ -110,10 +110,10 @@ module Gumbo::Binding {
     HAS gumbo_string_piece_s	$.original_name;
     has Str			$.value;
     HAS gumbo_string_piece_s	$.original_value;
-    HAS gumbo_source_position	$.name_start;
-    HAS gumbo_source_position	$.name_end;
-    HAS gumbo_source_position	$.value_start;
-    HAS gumbo_source_position	$.value_end;
+    HAS gumbo_source_position_s	$.name_start;
+    HAS gumbo_source_position_s	$.name_end;
+    HAS gumbo_source_position_s	$.value_start;
+    HAS gumbo_source_position_s	$.value_end;
   }
 
 #   typedef struct {
@@ -127,7 +127,7 @@ module Gumbo::Binding {
     class gumbo_text_s is repr('CStruct') is export {
       has Str			$.text;
       HAS gumbo_string_piece_s	$.original_text;
-      HAS gumbo_source_position	$.start_pos;
+      HAS gumbo_source_position_s	$.start_pos;
     }
     
 #      typedef struct {
@@ -154,8 +154,8 @@ module Gumbo::Binding {
     has int32			$.tag_namespace;
     HAS gumbo_string_piece_s	$.original_tag;
     HAS gumbo_string_piece_s	$.original_end_tag;
-    HAS gumbo_source_position	$.start_pos;
-    HAS gumbo_source_position	$.end_pos;
+    HAS gumbo_source_position_s	$.start_pos;
+    HAS gumbo_source_position_s	$.end_pos;
     HAS gumbo_vector_s		$.attributes;
   }
   
@@ -237,14 +237,6 @@ module Gumbo::Binding {
   sub gumbo_parse(Str) is native('libgumbo') returns gumbo_output_t is export { * }
   sub gumbo_normalized_tagname(int32) is native('libgumbo') returns str is export { * }
   sub gumbo_destroy_output(gumbo_options_s, gumbo_output_t) is native('libgumbo') is export { * }
-	
-  
-  #this is only for debug purpose, show the size of the differents struct
-  sub gumbo-type-size is export {
-    for gumbo_output_s, gumbo_vector_s, gumbo_attribute_s, gumbo_document_s, gumbo_element_s, gumbo_node_s, gumbo_source_position, gumbo_string_piece_s, gumbo_text_s -> $type {
-      say $type.perl~" : "~nativesizeof($type);
-    }
-    say nativesizeof(int32);
-  }
+
 #   our gumbo_options_s $kGumboDefaultOptions is export := cglobal('libgumbo', 'kGumboDefaultOptions', gumbo_options_s);
 }
