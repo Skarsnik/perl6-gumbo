@@ -42,7 +42,7 @@ module Gumbo::Binding {
 #   
   class gumbo_string_piece_s is repr('CStruct') is export {
     has Str		$.data;
-    has uint32		$.length;
+    has size_t		$.length;
   }
   
   #    typedef struct {
@@ -75,7 +75,7 @@ module Gumbo::Binding {
 #   
   class gumbo_document_s is repr('CStruct') is export {
      HAS gumbo_vector_s $.children;
-     has int8		$.has_doctype;
+     has bool		$.has_doctype;
      has Str		$.name;
      has Str		$.public_identifier;
      has Str		$.system_identifier;
@@ -183,7 +183,7 @@ module Gumbo::Binding {
   class gumbo_node_s is repr('CStruct') is export {
     has int32		$.type;
     has gumbo_node_s	$.parent;
-    has OpaquePointer	$.index_within_parent; # FIXME should be size_t
+    has size_t  	$.index_within_parent;
     has int32		$.parse_flags;
     HAS g_node_union	$.v;
   }
@@ -213,7 +213,7 @@ module Gumbo::Binding {
     has OpaquePointer	$.deallocator;
     has OpaquePointer	$.userdata;
     has	int32		$.tab_stop;
-    has	int8		$.stop_on_first_error;
+    has	bool		$.stop_on_first_error;
     has int32		$.max_errors;
     has	int32		$.fragment_context;
     has	int32		$.fragment_namespace;
@@ -234,9 +234,9 @@ module Gumbo::Binding {
   }
   
 
-  sub gumbo_parse(Str) is native('libgumbo') returns gumbo_output_t is export { * }
-  sub gumbo_normalized_tagname(int32) is native('libgumbo') returns Str is export { * }
-  sub gumbo_destroy_output(gumbo_options_s, gumbo_output_t) is native('libgumbo') is export { * }
+  sub gumbo_parse(Str) is native('libgumbo', 1) returns gumbo_output_t is export { * }
+  sub gumbo_normalized_tagname(int32) is native('libgumbo', 1) returns Str is export { * }
+  sub gumbo_destroy_output(gumbo_options_s, gumbo_output_t) is native('libgumbo', 1) is export { * }
 
-#   our gumbo_options_s $kGumboDefaultOptions is export := cglobal('libgumbo', 'kGumboDefaultOptions', gumbo_options_s);
+#   our gumbo_options_s $kGumboDefaultOptions is export := cglobal(('libgumbo', 1), 'kGumboDefaultOptions', gumbo_options_s);
 }

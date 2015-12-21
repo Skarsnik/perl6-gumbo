@@ -52,7 +52,7 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
       }
     }
     $!xml-creation-duration = now - $t;
-    my gumbo_options_s $kGumboDefaultOptions := cglobal('libgumbo', 'kGumboDefaultOptions', gumbo_options_s);
+    my gumbo_options_s $kGumboDefaultOptions := cglobal(('libgumbo', 1), 'kGumboDefaultOptions', gumbo_options_s);
     my gumbo_options_s $gopt = $kGumboDefaultOptions;
     gumbo_destroy_output($gopt, $gumbo_output);
     return $!xmldoc;
