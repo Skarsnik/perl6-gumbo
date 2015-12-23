@@ -234,9 +234,9 @@ module Gumbo::Binding {
   }
   
 
-  sub gumbo_parse(Str) is native('libgumbo', 1) returns gumbo_output_t is export { * }
-  sub gumbo_normalized_tagname(int32) is native('libgumbo', 1) returns Str is export { * }
-  sub gumbo_destroy_output(gumbo_options_s, gumbo_output_t) is native('libgumbo', 1) is export { * }
+  sub gumbo_parse(Str) is native('gumbo', v1) returns gumbo_output_t is export { * }
+  sub gumbo_normalized_tagname(int32) is native('gumbo', v1) returns Str is export { * }
+  sub gumbo_destroy_output(gumbo_options_s, gumbo_output_t) is native('gumbo', v1) is export { * }
 
 #   our gumbo_options_s $kGumboDefaultOptions is export := cglobal(('libgumbo', 1), 'kGumboDefaultOptions', gumbo_options_s);
 }
