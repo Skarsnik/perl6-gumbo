@@ -5,6 +5,7 @@ use Gumbo::Binding;
 
 unit class Gumbo::Parser;
 
+has XML::Document $.xmldoc;
 has Duration	$.c-parse-duration;
 has Duration	$.xml-creation-duration;
 has Int		%.stats;
