@@ -4,7 +4,7 @@ use HTML::Parser;
 use NativeCall;
 use Gumbo::Binding;
 
-unit class Gumbo::Parser does HTML::Parser;
+unit class Gumbo::Parser;
 
 has Duration	$.c-parse-duration;
 has Duration	$.xml-creation-duration;
