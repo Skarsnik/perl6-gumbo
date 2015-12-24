@@ -1,5 +1,4 @@
 use XML;
-use HTML::Parser;
 
 use NativeCall;
 use Gumbo::Binding;
