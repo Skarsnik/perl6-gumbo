@@ -13,6 +13,8 @@ module Gumbo::Binding {
   class gumbo_output_t is repr('CPointer') is export {};
   class gumbo_attribute_t is repr('CPointer') is export {};
 
+  
+  my constant LIB = ('gumbo', v1);
   enum gumbo_node_type is export (
      GUMBO_NODE_DOCUMENT => 0,
      GUMBO_NODE_ELEMENT => 1,
@@ -182,7 +184,7 @@ module Gumbo::Binding {
   
   class gumbo_node_s is repr('CStruct') is export {
     has int32		$.type;
-    has gumbo_node_s	$.parent;
+    has Pointer  	$.parent;
     has size_t  	$.index_within_parent;
     has int32		$.parse_flags;
     HAS g_node_union	$.v;
@@ -234,9 +236,9 @@ module Gumbo::Binding {
   }
   
 
-  sub gumbo_parse(Str) is native('gumbo', v1) returns gumbo_output_t is export { * }
-  sub gumbo_normalized_tagname(int32) is native('gumbo', v1) returns Str is export { * }
-  sub gumbo_destroy_output(gumbo_options_s, gumbo_output_t) is native('gumbo', v1) is export { * }
+  sub gumbo_parse(Str) is native(LIB) returns gumbo_output_t is export { * }
+  sub gumbo_normalized_tagname(int32) is native(LIB) returns Str is export { * }
+  sub gumbo_destroy_output(gumbo_options_s, gumbo_output_t) is native(LIB) is export { * }
 
 #   our gumbo_options_s $kGumboDefaultOptions is export := cglobal(('libgumbo', 1), 'kGumboDefaultOptions', gumbo_options_s);
 }
