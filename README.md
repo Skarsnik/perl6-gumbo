@@ -21,6 +21,13 @@ Gumbo is an implementation of the HTML5 parsing algorithm implemented as a pure 
 
 This module is a binding to this library. It provide a `parse-html` routine that parse a given html string and return a `XML::Document` object. To access all the Gumbo library has to offer you probably want to look at the `Gumbo::Binding` module.
 
+Installation
+============
+
+Simply use zef. For the tests to pass, you need to install the Gumbo library (see your distribution documentation). If you installed the Gumbo library in your own location you can set the `PERL6_GUMBOLIB` environement variable with the path to the library file.
+
+`zef install Gumbo` or `PERL6_GUMBOLIB="/home/user/gumbo/libgumbo.so.1" zef install Gumbo`
+
 Usage
 =====
 
