@@ -11,6 +11,10 @@ has Duration	$.xml-creation-duration;
 has Int		%.stats;
 has Bool	$!nowhitespace = False;
 
+sub as-element(GumboNode $x --> GumboElement) { nativecast(GumboElementNode, $x).v }
+sub as-document(GumboNode $x --> GumboDocument) { nativecast(GumboDocumentNode, $x).v }
+sub as-text(GumboNode $x --> GumboText) { nativecast(GumboTextNode, $x).v }
+
 method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Document {
     $!nowhitespace = $nowhitespace;
     my $t = now;
@@ -28,9 +32,9 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
     %!stats<whitespaces> = 0;
     %!stats<elements> = 1;
     if ($groot.type eq GUMBO_NODE_ELEMENT.value) {
-      my $htmlroot = build-element($groot.v.element);
-      my $tab_child = nativecast(CArray[GumboNode], $groot.v.element.children.data);
-      loop (my int $i = 0; $i < $groot.v.element.children.length; $i++) {
+      my $htmlroot = build-element(as-element($groot));
+      my $tab_child = nativecast(CArray[GumboNode], as-element($groot).children.data);
+      loop (my int $i = 0; $i < as-element($groot).children.length; $i++) {
         #my $n = nativecast(gumbo_node_s, $tab_child[$i]);
 	self!build-tree($tab_child[$i], $htmlroot) if %filters.elems eq 0;
 	if %filters.elems > 0 {
@@ -41,7 +45,7 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
       $!xmldoc = XML::Document.new: root => $htmlroot;
     }
     if ($gdoc.type eq GUMBO_NODE_DOCUMENT.value) {
-      my GumboDocument $cgdoc = $gdoc.v.document;
+      my GumboDocument $cgdoc = as-document($gdoc);
       my $tab_child = nativecast(CArray[GumboNode], $cgdoc.children.data);
       loop (my int $i = 0; $i < $cgdoc.children.length; $i++) {
 	my $node = $tab_child[$i];
@@ -62,34 +66,34 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
     %!stats<xml-objects>++;
     given $node.type {
       when GUMBO_NODE_ELEMENT.value {
-        my $xml = build-element($node.v.element);
+        my $xml = build-element(as-element($node));
         $parent.append($xml);
         %!stats<elements>++;
-        my $tab_child = nativecast(CArray[GumboNode], $node.v.element.children.data);
-	loop (my int $i = 0; $i < $node.v.element.children.length; $i++) {
+        my $tab_child = nativecast(CArray[GumboNode], as-element($node).children.data);
+	loop (my int $i = 0; $i < as-element($node).children.length; $i++) {
 	  self!build-tree($tab_child[$i], $xml);
 	}
 	0;
       }
       when GUMBO_NODE_TEXT.value {
-        my $xml = XML::Text.new(text => $node.v.text.text);
+        my $xml = XML::Text.new(text => as-text($node).text);
         $parent.append($xml);
       }
       when GUMBO_NODE_WHITESPACE.value {
 	%!stats<whitespaces>++;
 	if ! $!nowhitespace {
-	  my $xml = XML::Text.new(text => $node.v.text.text);
+	  my $xml = XML::Text.new(text => as-text($node).text);
 	  $parent.append($xml);
 	} else {
 	  %!stats<xml-objects>--;
 	}
       }
       when GUMBO_NODE_COMMENT.value {
-        my $xml = XML::Comment.new: data => $node.v.text.text;
+        my $xml = XML::Comment.new: data => as-text($node).text;
         $parent.append($xml);
       }
       when GUMBO_NODE_CDATA.value {
-        my $xml = XML::CData.new: data => $node.v.text.text;
+        my $xml = XML::CData.new: data => as-text($node).text;
         $parent.append($xml);
       }
     }
@@ -100,8 +104,8 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
     given $node.type {
       when GUMBO_NODE_ELEMENT.value {
         my $xml;
-        if (%filters<TAG> eq gumbo_normalized_tagname($node.v.element.tag)) {
-          my $elem := $node.v.element;
+        if (%filters<TAG> eq gumbo_normalized_tagname(as-element($node).tag)) {
+          my $elem := as-element($node);
 	  if ($elem.attributes.defined && (%filters.elems > 1 && !%filters<SINGLE>.defined || %filters.elems > 2 && %filters<SINGLE>.defined)) {
 	    my $tab_attr = nativecast(CArray[GumboAttribute], $elem.attributes.data);
 	    loop (my int $i = 0; $i < $elem.attributes.length; $i++) {
@@ -123,12 +127,12 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
 	  if ($in_filter) {
 	    %!stats<xml-objects>++;
 	    %!stats<elements>++;
-	    $xml = build-element($node.v.element);
+	    $xml = build-element(as-element($node));
 	    $parent.append($xml);
 	  }
 	}
-        my $tab_child = nativecast(CArray[GumboNode], $node.v.element.children.data);
-	loop (my int $i = 0; $i < $node.v.element.children.length; $i++) {
+        my $tab_child = nativecast(CArray[GumboNode], as-element($node).children.data);
+	loop (my int $i = 0; $i < as-element($node).children.length; $i++) {
 	  my $ret = True;
 	  self!build-tree($tab_child[$i], $xml) if $in_filter;
 	  $ret = self!build-tree2($tab_child[$i], $parent, %filters) if !$in_filter;

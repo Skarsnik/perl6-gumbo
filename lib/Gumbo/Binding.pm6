@@ -113,7 +113,27 @@ class GumboNode is repr('CStruct') is export {
 	has GumboNode                     $.parent; # Typedef<GumboNode>->|GumboNode|* parent
 	has size_t                        $.index_within_parent; # Typedef<size_t>->|unsigned int| index_within_parent
 	has int32                         $.parse_flags; # GumboParseFlags parse_flags
-	HAS GumboNode_v_Union             $.v; # Union v
+}
+class GumboTextNode is repr('CStruct') is export {
+	has int32                         $.type; # GumboNodeType type
+	has GumboNode                     $.parent; # Typedef<GumboNode>->|GumboNode|* parent
+	has size_t                        $.index_within_parent; # Typedef<size_t>->|unsigned int| index_within_parent
+	has int32                         $.parse_flags; # GumboParseFlags parse_flags
+	HAS GumboText                     $.v;
+}
+class GumboDocumentNode is repr('CStruct') is export {
+	has int32                         $.type; # GumboNodeType type
+	has GumboNode                     $.parent; # Typedef<GumboNode>->|GumboNode|* parent
+	has size_t                        $.index_within_parent; # Typedef<size_t>->|unsigned int| index_within_parent
+	has int32                         $.parse_flags; # GumboParseFlags parse_flags
+	HAS GumboDocument                 $.v;
+}
+class GumboElementNode is repr('CStruct') is export {
+	has int32                         $.type; # GumboNodeType type
+	has GumboNode                     $.parent; # Typedef<GumboNode>->|GumboNode|* parent
+	has size_t                        $.index_within_parent; # Typedef<size_t>->|unsigned int| index_within_parent
+	has int32                         $.parse_flags; # GumboParseFlags parse_flags
+	HAS GumboElement                  $.v;
 }
 class GumboOptions is repr('CStruct') is export {
 	has Pointer                       $.allocator; # Typedef<GumboAllocatorFunction>->|F:void* ( void*, Typedef<size_t>->|unsigned int|)*| allocator
