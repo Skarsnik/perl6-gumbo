@@ -27,12 +27,12 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
     %!stats<xml-objects> = 1;
     %!stats<whitespaces> = 0;
     %!stats<elements> = 1;
-    if ($groot.type eq GUMBO_NODE_ELEMENT.value) {
+    if ($groot.type == GUMBO_NODE_ELEMENT.value) {
       my $htmlroot = build-element($groot.v.element);
       my $tab_child = nativecast(CArray[GumboNode], $groot.v.element.children.data);
       loop (my int $i = 0; $i < $groot.v.element.children.length; $i++) {
         #my $n = nativecast(gumbo_node_s, $tab_child[$i]);
-	self!build-tree($tab_child[$i], $htmlroot) if %filters.elems eq 0;
+	self!build-tree($tab_child[$i], $htmlroot) if !%filters.elems;
 	if %filters.elems > 0 {
 	  my $ret = self!build-tree2(nativecast(GumboNode, $tab_child[$i]), $htmlroot, %filters);
 	  last unless $ret;
@@ -40,12 +40,12 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
       }
       $!xmldoc = XML::Document.new: root => $htmlroot;
     }
-    if ($gdoc.type eq GUMBO_NODE_DOCUMENT.value) {
+    if ($gdoc.type == GUMBO_NODE_DOCUMENT.value) {
       my GumboDocument $cgdoc = $gdoc.v.document;
       my $tab_child = nativecast(CArray[GumboNode], $cgdoc.children.data);
       loop (my int $i = 0; $i < $cgdoc.children.length; $i++) {
 	my $node = $tab_child[$i];
-	if ($node.type eq GUMBO_NODE_COMMENT.value)
+	if ($node.type == GUMBO_NODE_COMMENT.value)
 	{
 	  #No idea what to do, it probably catch comments outside the html tag
 	}
@@ -116,8 +116,8 @@ method parse (Str $html, :$nowhitespace = False, *%filters) returns XML::Documen
 	    }
 	  }
 	  #No filtering on attributes
-	  if ((%filters.elems eq 1 && !%filters<SINGLE>.defined || 
-	       %filters.elems eq 2 && %filters<SINGLE>.defined)) {
+	  if ((%filters.elems == 1 && !%filters<SINGLE>.defined ||
+	       %filters.elems == 2 && %filters<SINGLE>.defined)) {
 	    $in_filter = True;
 	  }
 	  if ($in_filter) {
