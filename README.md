@@ -110,7 +110,7 @@ This module provide a Gumbo::Parser class that does the role defined by the `HTM
     use Gumbo::Parser;
 
     my $parser = Gumbo::Parser.new;
-    my $xmldoc = $parser->parse($html);
+    my $xmldoc = $parser.parse($html);
     say $parser.c-parse-duration;
     say $parser.xml-creation-duration;
     say $parser.stats<xml-objects>; # the number of XML::* created (excluding the XML::Document)
